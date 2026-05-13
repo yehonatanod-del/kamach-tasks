@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>קמח עץ השדה — מנהל משימות</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --bg: #ffffff;
+    --surface: #f5f3ef;
+    --surface2: #eceae5;
+    --border: #ddd9d0;
+    --accent: #b8924a;
+    --accent2: #d4a85a;
+    --text: #1a1814;
+    --muted: #888070;
+    --danger: #c0392b;
+    --success: #2e7d52;
+    --warning: #b07000;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  #pin-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; z-index: 999; gap: 20px;
+  }
+  #pin-screen h2 { color: var(--accent); font-size: 20px; font-weight: 700; }
+  #pin-screen p  { color: var(--muted); font-size: 13px; }
+  #pin-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 20px; color: var(--text);
+    font-family: 'Heebo', sans-serif; font-size: 28px;
+    letter-spacing: 0.3em; text-align: center; width: 160px;
+  }
+  #pin-input:focus { outline: 2px solid var(--accent); }
+  #pin-error { color: var(--danger); font-size: 13px; min-height: 18px; }
+  #app { display: none; }
+
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Heebo', sans-serif; min-height: 100vh; padding: 20px 16px;
+  }
+
+  .header { text-align: center; margin-bottom: 24px; }
+  .header h1 { font-size: 20px; font-weight: 700; color: var(--accent); }
+  .header p  { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  .script-url-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; margin-bottom: 20px;
+  }
+  .script-url-section label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 5px; }
+  .url-row { display: flex; gap: 8px; }
+  .url-row input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 10px; color: var(--text);
+    font-family: monospace; font-size: 11px; direction: ltr;
+  }
+  .url-row input:focus { outline: 1px solid var(--accent); }
+  .btn-save-url {
+    background: var(--accent); color: #fff; border: none; border-radius: 6px;
+    padding: 7px 12px; font-family: 'Heebo', sans-serif; font-size: 13px;
+    font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+
+  .tabs {
+    display: flex; gap: 3px; margin-bottom: 18px;
+    background: var(--surface); border-radius: 8px; padding: 4px;
+  }
+  .tab {
+    flex: 1; padding: 8px 4px; text-align: center; font-size: 12px;
+    font-weight: 500; border-radius: 6px; cursor: pointer;
+    color: var(--muted); transition: all 0.2s;
+  }
+  .tab.active { background: var(--accent); color: #fff; font-weight: 700; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .paste-box {
+    background: var(--surface); border: 2px dashed var(--accent);
+    border-radius: 10px; padding: 14px; margin-bottom: 14px;
+  }
+  .paste-box label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px; }
+  .paste-box textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 9px 12px; color: var(--text);
+    font-family: monospace; font-size: 12px; direction: ltr;
+    resize: vertical; min-height: 72px;
+  }
+  .paste-box textarea:focus { outline: 1px solid var(--accent); }
+
+  .preview-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; margin-bottom: 14px; display: none;
+  }
+  .preview-card .pc-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .preview-row { display: flex; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+  .preview-row .lbl { color: var(--muted); min-width: 80px; }
+  .preview-row .val { color: var(--text); font-weight: 500; }
+
+  .form-group { margin-bottom: 13px; }
+  .form-group label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 11px; color: var(--text);
+    font-family: 'Heebo', sans-serif; font-size: 13px;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus { outline: 1px solid var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 60px; }
+  .form-group select option { background: var(--bg); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .update-id-row { display: flex; gap: 8px; margin-bottom: 13px; }
+  .update-id-row input {
+    width: 80px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 11px; color: var(--text);
+    font-family: 'Heebo', sans-serif; font-size: 13px;
+  }
+  .btn-load {
+    background: var(--surface2); border: 1px solid var(--accent);
+    color: var(--accent); border-radius: 6px; padding: 8px 12px;
+    font-family: 'Heebo', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+
+  .btn-primary {
+    width: 100%; background: var(--accent); color: #fff; border: none;
+    border-radius: 8px; padding: 12px; font-family: 'Heebo', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 2px;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { background: var(--muted); cursor: not-allowed; }
+
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .section-title {
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;
+  }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 500;
+    transition: transform 0.3s ease; z-index: 200; white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--success); color: var(--success); }
+  .toast.error   { border-color: var(--danger);  color: var(--danger);  }
+</style>
+</head>
+<body>
+
+<div id="pin-screen">
+  <h2>⚙ קמח עץ השדה</h2>
+  <p>הכנס קוד כניסה</p>
+  <input type="password" id="pin-input" maxlength="4" inputmode="numeric" placeholder="••••" onkeyup="checkPin(event)">
+  <div id="pin-error"></div>
+</div>
+
+<div id="app">
+
+<div class="header">
+  <h1>⚙ קמח עץ השדה</h1>
+  <p>ממשק עדכון משימות</p>
+</div>
+
+<div class="script-url-section">
+  <label>כתובת Apps Script</label>
+  <div class="url-row">
+    <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/..." dir="ltr">
+    <button class="btn-save-url" onclick="saveUrl()">שמור</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('paste')">📋 הדבק מקלוד</div>
+  <div class="tab" onclick="switchTab('add')">➕ ידנית</div>
+  <div class="tab" onclick="switchTab('update')">✏️ עדכון</div>
+  <div class="tab" onclick="switchTab('log')">📖 יומן</div>
+</div>
+
+<!-- הדבק מקלוד -->
+<div class="panel active" id="panel-paste">
+  <div class="paste-box">
+    <label>הדבק כאן את השורה מקלוד</label>
+    <textarea id="paste-input" placeholder='{"action":"addTask","title":"...","category":"...","priority":"...","notes":"...","dueDate":""}' oninput="parsePaste()"></textarea>
+  </div>
+  <div class="preview-card" id="preview-card">
+    <div class="pc-title" id="pc-title"></div>
+    <div class="preview-row"><span class="lbl">קטגוריה</span><span class="val" id="pc-cat"></span></div>
+    <div class="preview-row"><span class="lbl">אופק זמן</span><span class="val" id="pc-pri"></span></div>
+    <div class="preview-row"><span class="lbl">הערות</span><span class="val" id="pc-notes"></span></div>
+    <div class="preview-row"><span class="lbl">תאריך יעד</span><span class="val" id="pc-due"></span></div>
+  </div>
+  <button class="btn-primary" id="paste-btn" onclick="submitPaste()" disabled>שלח לשיטס ✓</button>
+</div>
+
+<!-- הוספה ידנית -->
+<div class="panel" id="panel-add">
+  <div class="form-group">
+    <label>כותרת משימה *</label>
+    <input type="text" id="add-title" placeholder="תיאור המשימה">
+  </div>
+  <div class="row2">
+    <div class="form-group">
+      <label>קטגוריה</label>
+      <select id="add-category">
+        <option>מכירות</option><option>הורדת עלויות</option><option>יבוא</option>
+        <option selected>תחזוקה</option><option>ניהול עובדים</option><option>תזרים</option>
+        <option>פרויקטים</option><option>פיתוח ואסטרטגיה</option><option>רכש</option>
+        <option>מנכ"ל</option><option>גביה</option><option>כספים</option>
+        <option>ארגון</option><option>שת"פ</option><option>אישי</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>אופק זמן</label>
+      <select id="add-priority">
+        <option value="היום">🔴 היום</option>
+        <option value="השבוע" selected>🟡 השבוע</option>
+        <option value="החודש">🔵 החודש</option>
+        <option value="עתיד">⚪ עתיד</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>הערות</label>
+    <textarea id="add-notes" placeholder="פרטים נוספים..."></textarea>
+  </div>
+  <div class="form-group">
+    <label>תאריך יעד (אופציונלי)</label>
+    <input type="text" id="add-dueDate" placeholder="DD/MM/YYYY">
+  </div>
+  <button class="btn-primary" onclick="addTask()">הוסף לשיטס ✓</button>
+</div>
+
+<!-- עדכון -->
+<div class="panel" id="panel-update">
+  <div class="section-title">מציאת משימה לפי ID</div>
+  <div class="update-id-row">
+    <input type="number" id="update-id" placeholder="ID">
+    <button class="btn-load" onclick="prepareUpdate()">טען</button>
+  </div>
+  <div class="divider"></div>
+  <div class="form-group">
+    <label>סטטוס חדש</label>
+    <select id="update-status">
+      <option value="">— ללא שינוי —</option>
+      <option value="פתוח">פתוח</option>
+      <option value="ממתין לאחר">ממתין לאחר</option>
+      <option value="בוצע">✅ בוצע</option>
+      <option value="נדחה">⏭️ נדחה</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>אופק זמן</label>
+    <select id="update-priority">
+      <option value="">— ללא שינוי —</option>
+      <option value="היום">🔴 היום</option>
+      <option value="השבוע">🟡 השבוע</option>
+      <option value="החודש">🔵 החודש</option>
+      <option value="עתיד">⚪ עתיד</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>ממתין ל</label>
+    <input type="text" id="update-waitingFor" placeholder="שם אדם">
+  </div>
+  <div class="form-group">
+    <label>הערה נוספת</label>
+    <textarea id="update-notes" placeholder="הוסף הערה..."></textarea>
+  </div>
+  <div class="form-group">
+    <label>תאריך יעד (אופציונלי)</label>
+    <input type="text" id="update-dueDate" placeholder="DD/MM/YYYY">
+  </div>
+  <button class="btn-primary" onclick="updateTask()">עדכן בשיטס ✓</button>
+</div>
+
+<!-- יומן -->
+<div class="panel" id="panel-log">
+  <div class="form-group">
+    <label>ID משימה</label>
+    <input type="number" id="log-taskId" placeholder="מספר משימה">
+  </div>
+  <div class="form-group">
+    <label>כותרת משימה</label>
+    <input type="text" id="log-taskTitle" placeholder="שם המשימה">
+  </div>
+  <div class="form-group">
+    <label>סוג פעולה</label>
+    <select id="log-actionType">
+      <option>בוצע</option><option>נדחה</option><option>פורק</option>
+      <option>תזכורת</option><option>הוסף</option><option>עדכון</option><option>הערה</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>פרטים</label>
+    <textarea id="log-details" placeholder="מה קרה?"></textarea>
+  </div>
+  <button class="btn-primary" onclick="logActivity()">תעד ביומן ✓</button>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const CORRECT_PIN    = '5213';
+  const SESSION_KEY    = 'kamach_auth';
+  const SCRIPT_URL_KEY = 'kamach_script_url';
+  const DEFAULT_URL    = 'https://script.google.com/macros/s/AKfycbzppcqirsiZssCKtXHfU1Hc9iEEcjcnNQogS3EfNuCtPCIdb7Ln_Zw6uKrKesh-uCpWnA/exec';
+
+  let parsedData = null;
+
+  function checkPin(e) {
+    const val = document.getElementById('pin-input').value;
+    if (val.length === 4) {
+      if (val === CORRECT_PIN) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        document.getElementById('pin-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+      } else {
+        document.getElementById('pin-error').textContent = 'קוד שגוי, נסה שוב';
+        document.getElementById('pin-input').value = '';
+        setTimeout(() => document.getElementById('pin-error').textContent = '', 2000);
+      }
+    }
+  }
+
+  window.onload = () => {
+    if (sessionStorage.getItem(SESSION_KEY)) {
+      document.getElementById('pin-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    }
+    document.getElementById('scriptUrl').value = localStorage.getItem(SCRIPT_URL_KEY) || DEFAULT_URL;
+  };
+
+  function saveUrl() {
+    const val = document.getElementById('scriptUrl').value.trim();
+    if (val) { localStorage.setItem(SCRIPT_URL_KEY, val); showToast('כתובת נשמרה ✓', 'success'); }
+  }
+
+  function switchTab(name) {
+    const names = ['paste','add','update','log'];
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i] === name));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+  }
+
+  function parsePaste() {
+    const raw  = document.getElementById('paste-input').value.trim();
+    const card = document.getElementById('preview-card');
+    const btn  = document.getElementById('paste-btn');
+    parsedData = null; card.style.display = 'none'; btn.disabled = true;
+    if (!raw) return;
+    try {
+      const d = JSON.parse(raw);
+      parsedData = d;
+      document.getElementById('pc-title').textContent = d.title    || '—';
+      document.getElementById('pc-cat').textContent   = d.category || '—';
+      document.getElementById('pc-pri').textContent   = d.priority || '—';
+      document.getElementById('pc-notes').textContent = d.notes    || '—';
+      document.getElementById('pc-due').textContent   = d.dueDate  || '—';
+      card.style.display = 'block'; btn.disabled = false;
+    } catch(e) { showToast('JSON לא תקין', 'error'); }
+  }
+
+  async function submitPaste() {
+    if (!parsedData) return;
+    const btn = document.getElementById('paste-btn');
+    btn.disabled = true; btn.textContent = 'שולח...';
+    try {
+      const result = await sendToScript({
+        action: parsedData.action || 'addTask',
+        category: parsedData.category || '',
+        title: parsedData.title || '',
+        notes: parsedData.notes || '',
+        priority: parsedData.priority || '',
+        status: parsedData.status || 'פתוח',
+        waitingFor: parsedData.waitingFor || '',
+        dueDate: parsedData.dueDate || '',
+        updatedDate: getDate(), week: getWeek()
+      });
+      if (result.success) {
+        showToast('✓ משימה נוספה (ID ' + result.id + ')', 'success');
+        document.getElementById('paste-input').value = '';
+        document.getElementById('preview-card').style.display = 'none';
+        parsedData = null;
+      } else { showToast('שגיאה: ' + (result.error || 'לא ידוע'), 'error'); }
+    } catch(e) { showToast('שגיאת חיבור', 'error'); }
+    btn.disabled = false; btn.textContent = 'שלח לשיטס ✓';
+  }
+
+  async function addTask() {
+    const title = document.getElementById('add-title').value.trim();
+    if (!title) { showToast('חסרה כותרת משימה', 'error'); return; }
+    const btn = document.querySelector('#panel-add .btn-primary');
+    btn.disabled = true; btn.textContent = 'שולח...';
+    try {
+      const result = await sendToScript({
+        action: 'addTask',
+        category: document.getElementById('add-category').value,
+        title, notes: document.getElementById('add-notes').value,
+        priority: document.getElementById('add-priority').value,
+        status: 'פתוח', dueDate: document.getElementById('add-dueDate').value,
+        updatedDate: getDate(), week: getWeek()
+      });
+      if (result.success) {
+        showToast('✓ משימה נוספה (ID ' + result.id + ')', 'success');
+        document.getElementById('add-title').value = '';
+        document.getElementById('add-notes').value = '';
+        document.getElementById('add-dueDate').value = '';
+      } else { showToast('שגיאה: ' + (result.error || 'לא ידוע'), 'error'); }
+    } catch(e) { showToast('שגיאת חיבור', 'error'); }
+    btn.disabled = false; btn.textContent = 'הוסף לשיטס ✓';
+  }
+
+  function prepareUpdate() {
+    const id = document.getElementById('update-id').value;
+    if (!id) { showToast('הכנס ID', 'error'); return; }
+    showToast('מוכן לעדכון ID ' + id, 'success');
+  }
+
+  async function updateTask() {
+    const id = document.getElementById('update-id').value;
+    if (!id) { showToast('הכנס ID', 'error'); return; }
+    const btn = document.querySelector('#panel-update .btn-primary');
+    btn.disabled = true; btn.textContent = 'מעדכן...';
+    try {
+      const payload = { action: 'updateTask', id };
+      const s = document.getElementById('update-status').value;
+      const p = document.getElementById('update-priority').value;
+      const w = document.getElementById('update-waitingFor').value;
+      const n = document.getElementById('update-notes').value;
+      const d = document.getElementById('update-dueDate').value;
+      if (s) payload.status = s;
+      if (s === 'בוצע') payload.done = 'כן';
+      if (p) payload.priority   = p;
+      if (w) payload.waitingFor = w;
+      if (n) payload.notes      = n;
+      if (d) payload.dueDate    = d;
+      const result = await sendToScript(payload);
+      if (result.success) { showToast('✓ משימה ' + id + ' עודכנה', 'success'); }
+      else { showToast('שגיאה: ' + (result.error || 'לא ידוע'), 'error'); }
+    } catch(e) { showToast('שגיאת חיבור', 'error'); }
+    btn.disabled = false; btn.textContent = 'עדכן בשיטס ✓';
+  }
+
+  async function logActivity() {
+    const btn = document.querySelector('#panel-log .btn-primary');
+    btn.disabled = true; btn.textContent = 'שולח...';
+    try {
+      const result = await sendToScript({
+        action: 'logActivity', date: getDate(), time: getTime(),
+        actionType: document.getElementById('log-actionType').value,
+        taskId: document.getElementById('log-taskId').value,
+        taskTitle: document.getElementById('log-taskTitle').value,
+        details: document.getElementById('log-details').value
+      });
+      if (result.success) {
+        showToast('✓ תועד ביומן', 'success');
+        document.getElementById('log-details').value = '';
+      } else { showToast('שגיאה: ' + (result.error || 'לא ידוע'), 'error'); }
+    } catch(e) { showToast('שגיאת חיבור', 'error'); }
+    btn.disabled = false; btn.textContent = 'תעד ביומן ✓';
+  }
+
+  function getUrl() { return localStorage.getItem(SCRIPT_URL_KEY) || DEFAULT_URL; }
+
+  async function sendToScript(payload) {
+    const res = await fetch(getUrl(), {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
+
+  function getWeek() {
+    const n = new Date(), s = new Date(n.getFullYear(), 0, 1);
+    return 'שבוע ' + Math.ceil(((n - s) / 86400000 + s.getDay() + 1) / 7);
+  }
+  function getDate() {
+    return new Date().toLocaleDateString('he-IL', {day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+  function getTime() {
+    return new Date().toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'});
+  }
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
