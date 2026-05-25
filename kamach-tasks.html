@@ -367,6 +367,13 @@
       const d = JSON.parse(raw);
       parsedData = d;
       document.getElementById('pc-title').textContent = d.title    || '—';
+      async function sendToScript(payload) {
+    const res = await fetch(getUrl(), {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
       document.getElementById('pc-cat').textContent   = d.category || '—';
       document.getElementById('pc-pri').textContent   = d.priority || '—';
       document.getElementById('pc-notes').textContent = d.notes    || '—';
