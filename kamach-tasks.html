@@ -318,7 +318,7 @@
   const CORRECT_PIN    = '5213';
   const SESSION_KEY    = 'kamach_auth';
   const SCRIPT_URL_KEY = 'kamach_script_url';
-  const DEFAULT_URL    = 'https://script.google.com/macros/s/AKfycbzppcqirsiZssCKtXHfU1Hc9iEEcjcnNQogS3EfNuCtPCIdb7Ln_Zw6uKrKesh-uCpWnA/exec';
+  const DEFAULT_URL    = 'https://script.google.com/macros/s/AKfycbzluC5fVSzMWoRZuwJlCGExcn_KIrJ0F7ygjHcmzFHgUF9FOLJHVORQZ9mz9MirPuV3aQ/exec';
 
   let parsedData = null;
 
@@ -367,13 +367,6 @@
       const d = JSON.parse(raw);
       parsedData = d;
       document.getElementById('pc-title').textContent = d.title    || '—';
-      async function sendToScript(payload) {
-    const res = await fetch(getUrl(), {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    });
-    return res.json();
-  }
       document.getElementById('pc-cat').textContent   = d.category || '—';
       document.getElementById('pc-pri').textContent   = d.priority || '—';
       document.getElementById('pc-notes').textContent = d.notes    || '—';
